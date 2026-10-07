@@ -110,16 +110,6 @@ export function Footer() {
                 YouTube Channel
               </a>
             </li>
-            <li>
-              <a href="https://github.com/VRGC-vit" target="_blank" rel="noopener noreferrer">
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://linkedin.com/company/vrgcvitb" target="_blank" rel="noopener noreferrer">
-                LinkedIn
-              </a>
-            </li>
           </ul>
 
           {/* Minimalist Monochrome Social Icons */}
