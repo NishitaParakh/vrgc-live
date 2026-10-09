@@ -92,13 +92,6 @@ const STAGE_DATA: Record<string, StageData> = {
   },
 };
 
-type ChatMessage = {
-  badge: 'VANGUARD' | 'VARSITY' | 'CONTENDER' | 'CADET';
-  badgeClass: string;
-  sender: string;
-  content: string;
-};
-
 export default function LivePage() {
   useScrollAnimations();
 
