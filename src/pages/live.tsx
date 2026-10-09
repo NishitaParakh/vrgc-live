@@ -1,8 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useScrollAnimations } from '@/hooks/useScrollAnimations';
 import { ScrollFloat } from '@/components';
+import {
+  subscribeToLiveConfig,
+  subscribeToLiveMatch,
+  subscribeToLiveChat,
+  sendLiveChatMessage,
+  DEFAULT_LIVE_CONFIG,
+  DEFAULT_LIVE_MATCH,
+} from '@/services/liveService';
+import { LiveConfigState, LiveMatchState, LiveChatMessage } from '@/types/live';
+import StreamArena from '@/components/live/StreamArena';
+import ValorantScoreboard from '@/components/live/ValorantScoreboard';
+import TournamentProgressionChart from '@/components/live/TournamentProgressionChart';
 
 
 type StageData = {
@@ -90,40 +102,77 @@ type ChatMessage = {
 export default function LivePage() {
   useScrollAnimations();
 
+  const [liveConfig, setLiveConfig] = useState<LiveConfigState>(DEFAULT_LIVE_CONFIG);
+  const [liveMatch, setLiveMatch] = useState<LiveMatchState>(DEFAULT_LIVE_MATCH);
+  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
   const [currentStageKey, setCurrentStageKey] = useState<string>('stage1');
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+
+  const activeMatches =
+    liveMatch.matches && liveMatch.matches.length > 0
+      ? liveMatch.matches.slice(0, liveMatch.activeMatchCount || liveMatch.matches.length)
+      : [];
+
+  // Automatically sync selected match if current selection is invalid or none selected
+  useEffect(() => {
+    if (activeMatches.length > 0) {
+      if (!selectedMatchId || !activeMatches.some((m) => m.id === selectedMatchId)) {
+        const featured = activeMatches.find((m) => m.isFeatured);
+        setSelectedMatchId(featured ? featured.id : activeMatches[0].id);
+      }
+    }
+  }, [activeMatches, selectedMatchId]);
+
+  const [chatMessages, setChatMessages] = useState<LiveChatMessage[]>([
     {
+      id: 'msg-1',
       badge: 'VANGUARD',
       badgeClass: 'badge-vanguard',
       sender: 'Parardha:',
       content: 'Welcome to the Grand Finals everyone! Make some noise in chat!',
     },
     {
+      id: 'msg-2',
       badge: 'VARSITY',
       badgeClass: 'badge-varsity',
       sender: 'Aether:',
       content: 'A-site defense is completely locked down this half!',
     },
     {
+      id: 'msg-3',
       badge: 'CONTENDER',
       badgeClass: 'badge-contender',
       sender: 'Krypton:',
       content: 'THAT FLICK FROM PHANTOM WAS DISGUSTING 🔥🔥🔥',
     },
     {
+      id: 'msg-4',
       badge: 'CADET',
       badgeClass: 'badge-cadet',
       sender: 'Rookie_09:',
       content: 'First time watching collegiate finals, the production quality is insane!',
     },
-    {
-      badge: 'VARSITY',
-      badgeClass: 'badge-varsity',
-      sender: 'Ghost_CS:',
-      content: 'Economy reset incoming for Shadow Royals if they lose round 21.',
-    },
   ]);
   const [inputMsg, setInputMsg] = useState('');
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto-scroll chat to latest message
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
+
+  // Subscribe in real-time to Firestore live configuration and matches
+  useEffect(() => {
+    const unsubConfig = subscribeToLiveConfig(setLiveConfig);
+    const unsubMatch = subscribeToLiveMatch(setLiveMatch);
+    const unsubChat = subscribeToLiveChat((msgs) => {
+      if (msgs.length > 0) setChatMessages(msgs);
+    });
+    return () => {
+      unsubConfig();
+      unsubMatch();
+      unsubChat();
+    };
+  }, []);
 
   // Apply theme-crimson to document body while on this page
   useEffect(() => {
@@ -135,19 +184,30 @@ export default function LivePage() {
 
   const stage = STAGE_DATA[currentStageKey];
 
-  const handleSendChat = (e: React.FormEvent) => {
+  const handleSendChat = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputMsg.trim()) return;
+    const content = inputMsg.trim();
+    setInputMsg('');
+
+    // Optimistic local update
     setChatMessages((prev) => [
       ...prev,
       {
+        id: `local-${Date.now()}`,
         badge: 'CADET',
         badgeClass: 'badge-cadet',
         sender: 'You:',
-        content: inputMsg.trim(),
+        content,
       },
     ]);
-    setInputMsg('');
+
+    await sendLiveChatMessage({
+      badge: 'CADET',
+      badgeClass: 'badge-cadet',
+      sender: 'Cadet Spectator',
+      content,
+    });
   };
 
   return (
@@ -194,81 +254,102 @@ export default function LivePage() {
           </p>
 
           <div className="live-arena-wrapper">
-            {/* Functional Stage Switcher Tabs */}
-            <div className="filter-bar" style={{ marginBottom: '2rem' }}>
-              <button
-                className={`crimson-filter-pill ${currentStageKey === 'stage1' ? 'active' : ''}`}
-                onClick={() => setCurrentStageKey('stage1')}
+            {/* Dynamic Parallel Matches Selector Tabs (Scales automatically with match count) */}
+            {activeMatches.length > 0 && (
+              <div
+                className="filter-bar"
+                style={{
+                  marginBottom: '1.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexWrap: 'wrap',
+                  gap: '0.65rem',
+                }}
               >
-                STAGE 01: VALORANT FINALS
-              </button>
-              <button
-                className={`crimson-filter-pill ${currentStageKey === 'stage2' ? 'active' : ''}`}
-                onClick={() => setCurrentStageKey('stage2')}
-              >
-                STAGE 02: CS2 BATTLEGROUND
-              </button>
-              <button
-                className={`crimson-filter-pill ${currentStageKey === 'stage3' ? 'active' : ''}`}
-                onClick={() => setCurrentStageKey('stage3')}
-              >
-                STAGE 03: CAMPUS BGMI LAN
-              </button>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.45rem',
+                    marginRight: '0.4rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                  }}
+                >
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444' }}></span>
+                  <span>PARALLEL MATCHES ({activeMatches.length}):</span>
+                </div>
+
+                {activeMatches.map((m) => {
+                  const isSelected = selectedMatchId === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      className={`crimson-filter-pill ${isSelected ? 'active' : ''}`}
+                      onClick={() => setSelectedMatchId(m.id)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.55rem',
+                        padding: '0.45rem 1.05rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <span style={{ fontWeight: 800, letterSpacing: '0.04em' }}>
+                        M{m?.matchNumber}: {m?.team1?.name || 'Team 1'} VS {m?.team2?.name || 'Team 2'}
+                      </span>
+                      <span
+                        style={{
+                          padding: '0.12rem 0.45rem',
+                          borderRadius: '4px',
+                          backgroundColor: isSelected ? 'rgba(0,0,0,0.6)' : 'rgba(239, 68, 68, 0.25)',
+                          color: isSelected ? '#fff' : '#ff4d6d',
+                          fontFamily: 'var(--font-mono)',
+                          fontWeight: 900,
+                          fontSize: '0.75rem',
+                          border: isSelected
+                            ? '1px solid rgba(255,255,255,0.3)'
+                            : '1px solid rgba(239, 68, 68, 0.4)',
+                        }}
+                      >
+                        {m?.team1?.score ?? 0} : {m?.team2?.score ?? 0}
+                      </span>
+                      {m.isFeatured && (
+                        <span style={{ color: '#fbbf24', fontSize: '0.75rem' }} title="Featured Match">
+                          ★
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Real-time Valorant VCT Top-Bar HUD (Full Stadium Scoreboard) */}
+            <div style={{ marginBottom: '1.5rem', width: '100%' }}>
+              <ValorantScoreboard
+                match={liveMatch}
+                selectedMatchId={selectedMatchId}
+                onSelectMatch={setSelectedMatchId}
+              />
             </div>
 
-            {/* 2-Column Broadcast Grid: Player/Scoreboard + Live Chat */}
+            {/* 2-Column Broadcast Grid: Player/Stream + Live Chat */}
             <div className="live-broadcast-grid">
-              {/* Left Column: Video + Stadium Scoreboard + Killfeed */}
-              <div className="live-player-col">
-                {/* 16:9 Stream Box */}
-                <div className="crimson-stream-box" style={{ aspectRatio: '16/9', width: '100%' }}>
-                  <iframe
-                    id="mainStreamFrame"
-                    src={stage.streamUrl}
-                    style={{ border: 0, width: '100%', height: '100%' }}
-                    allowFullScreen={true}
-                    scrolling="no"
-                    title="Live Stream Broadcast"
-                  ></iframe>
-                </div>
-
-                {/* Full Stadium Scoreboard Strip */}
-                <div className="stadium-scoreboard" id="stadiumScoreboard">
-                  {/* Team 1 */}
-                  <div className="sb-team">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={stage.team1Logo} alt="Team 1" className="sb-team-logo" />
-                    <div>
-                      <h4 className="sb-team-name">{stage.team1Name}</h4>
-                      <span className="sb-team-tag">{stage.team1Tag}</span>
-                    </div>
-                  </div>
-
-                  {/* Match Center Score & Timer */}
-                  <div className="sb-center">
-                    <div className="sb-map-label">{stage.mapName}</div>
-                    <div className="sb-score-num">{stage.scoreVal}</div>
-                    <div className="sb-timer-wrap">
-                      <span>{stage.matchTimer}</span>
-                    </div>
-                  </div>
-
-                  {/* Team 2 */}
-                  <div className="sb-team sb-right">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={stage.team2Logo} alt="Team 2" className="sb-team-logo" />
-                    <div>
-                      <h4 className="sb-team-name">{stage.team2Name}</h4>
-                      <span className="sb-team-tag" style={{ color: '#60a5fa' }}>
-                        {stage.team2Tag}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              {/* Left Column: Stream Arena + Killfeed */}
+              <div className="live-player-col" style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', minWidth: 0, height: '100%' }}>
+                {/* Memoized Multi-Stream Arena with Audio Focus */}
+                <StreamArena config={liveConfig} />
 
                 {/* Scrolling Kill-Feed Ticker */}
                 <div className="killfeed-strip" id="killFeedStrip">
-                  {stage.killfeed.map((kf, i) => (
+                  {(liveMatch.killfeed && liveMatch.killfeed.length > 0 ? liveMatch.killfeed : stage.killfeed).map((kf, i) => (
                     <div key={i} className="kf-item">
                       <span className="kf-killer">{kf.k}</span>{' '}
                       <span className="kf-weapon">{kf.w}</span>{' '}
@@ -290,12 +371,13 @@ export default function LivePage() {
                 {/* Scrollable Message Body */}
                 <div className="chat-msgs-body" id="chatMsgsBody">
                   {chatMessages.map((msg, idx) => (
-                    <div key={idx} className="chat-msg-row">
+                    <div key={msg.id || idx} className="chat-msg-row">
                       <span className={`chat-badge ${msg.badgeClass}`}>{msg.badge}</span>
                       <span className="chat-sender">{msg.sender}</span>
                       <span className="chat-content">{msg.content}</span>
                     </div>
                   ))}
+                  <div ref={chatEndRef} />
                 </div>
 
                 {/* Chat Input Bar */}
@@ -362,97 +444,7 @@ export default function LivePage() {
                 </Link>
               </div>
 
-              <div className="bracket-rounds-grid">
-                {/* Quarter Finals */}
-                <div className="bracket-round-col">
-                  <span
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.7rem',
-                      color: 'var(--white-dim)',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    QUARTER-FINALS (BO3)
-                  </span>
-
-                  <div className="bracket-match-node">
-                    <div className="bmn-team winner">
-                      <span>VRGC Alpha</span> <span className="bmn-score">2</span>
-                    </div>
-                    <div className="bmn-team">
-                      <span>Titan Squad</span>{' '}
-                      <span className="bmn-score" style={{ color: 'var(--white-dim)' }}>
-                        0
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="bracket-match-node">
-                    <div className="bmn-team winner">
-                      <span>Shadow Royals</span> <span className="bmn-score">2</span>
-                    </div>
-                    <div className="bmn-team">
-                      <span>Vortex Gaming</span>{' '}
-                      <span className="bmn-score" style={{ color: 'var(--white-dim)' }}>
-                        1
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Semi Finals */}
-                <div className="bracket-round-col">
-                  <span
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.7rem',
-                      color: 'var(--white-dim)',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    SEMI-FINALS (BO3)
-                  </span>
-
-                  <div className="bracket-match-node">
-                    <div className="bmn-team winner">
-                      <span>VRGC Alpha</span> <span className="bmn-score">2</span>
-                    </div>
-                    <div className="bmn-team">
-                      <span>MIT Gaming</span>{' '}
-                      <span className="bmn-score" style={{ color: 'var(--white-dim)' }}>
-                        1
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Grand Finals (ACTIVE LIVE) */}
-                <div className="bracket-round-col">
-                  <span
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.7rem',
-                      color: '#ef4444',
-                      textTransform: 'uppercase',
-                      fontWeight: 700,
-                    }}
-                  >
-                    ● GRAND FINALS (NOW LIVE)
-                  </span>
-
-                  <div className="bracket-match-node active-live">
-                    <div className="bmn-team winner">
-                      <span style={{ color: '#ef4444' }}>★ VRGC Alpha</span>{' '}
-                      <span className="bmn-score">11</span>
-                    </div>
-                    <div className="bmn-team">
-                      <span style={{ color: '#fff' }}>Shadow Royals</span>{' '}
-                      <span className="bmn-score">9</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <TournamentProgressionChart matches={liveMatch.matches} />
             </div>
 
             {/* 2. MATCH ARCHIVE / VOD GRID (6 REPLAYS) */}

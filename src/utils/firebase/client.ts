@@ -2,6 +2,7 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
 // ── vrgc-main (primary app) ───────────────────────────────────────
+// ── vrgc-main (primary app) ───────────────────────────────────────
 const mainConfig = {
   apiKey: process.env.NEXT_PUBLIC_MAIN_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_MAIN_FIREBASE_AUTH_DOMAIN,
@@ -12,10 +13,12 @@ const mainConfig = {
   measurementId: process.env.NEXT_PUBLIC_MAIN_FIREBASE_MEASUREMENT_ID,
 };
 
-const app = !getApps().length ? initializeApp(mainConfig) : getApp();
+const app = !getApps().length
+  ? initializeApp(mainConfig.apiKey ? mainConfig : { apiKey: "placeholder", projectId: "vrgc-main" })
+  : getApp();
 const db = getFirestore(app);
 
-// ── vrgc-form (real member registrations) ────────────────────────
+// ── vrgc-form (real member registrations & live broadcast engine) ─
 const formConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -27,8 +30,12 @@ const formConfig = {
 };
 
 const FORM_APP_NAME = "vrgc-form";
-const formApp = getApps().find((a) => a.name === FORM_APP_NAME)
-  ?? initializeApp(formConfig, FORM_APP_NAME);
+const formApp =
+  getApps().find((a) => a.name === FORM_APP_NAME) ??
+  initializeApp(
+    formConfig.apiKey ? formConfig : { apiKey: "placeholder", projectId: "vrgc-form" },
+    FORM_APP_NAME
+  );
 const formDb = getFirestore(formApp);
 
 export { app, db, formApp, formDb };
