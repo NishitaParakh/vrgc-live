@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useScrollAnimations } from '@/hooks/useScrollAnimations';
 import { ScrollFloat } from '@/components';
+import LiveChat from '@/components/LiveChat';
 
 
 type StageData = {
@@ -80,50 +81,10 @@ const STAGE_DATA: Record<string, StageData> = {
   },
 };
 
-type ChatMessage = {
-  badge: 'VANGUARD' | 'VARSITY' | 'CONTENDER' | 'CADET';
-  badgeClass: string;
-  sender: string;
-  content: string;
-};
-
 export default function LivePage() {
   useScrollAnimations();
 
   const [currentStageKey, setCurrentStageKey] = useState<string>('stage1');
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    {
-      badge: 'VANGUARD',
-      badgeClass: 'badge-vanguard',
-      sender: 'Parardha:',
-      content: 'Welcome to the Grand Finals everyone! Make some noise in chat!',
-    },
-    {
-      badge: 'VARSITY',
-      badgeClass: 'badge-varsity',
-      sender: 'Aether:',
-      content: 'A-site defense is completely locked down this half!',
-    },
-    {
-      badge: 'CONTENDER',
-      badgeClass: 'badge-contender',
-      sender: 'Krypton:',
-      content: 'THAT FLICK FROM PHANTOM WAS DISGUSTING 🔥🔥🔥',
-    },
-    {
-      badge: 'CADET',
-      badgeClass: 'badge-cadet',
-      sender: 'Rookie_09:',
-      content: 'First time watching collegiate finals, the production quality is insane!',
-    },
-    {
-      badge: 'VARSITY',
-      badgeClass: 'badge-varsity',
-      sender: 'Ghost_CS:',
-      content: 'Economy reset incoming for Shadow Royals if they lose round 21.',
-    },
-  ]);
-  const [inputMsg, setInputMsg] = useState('');
 
   // Apply theme-crimson to document body while on this page
   useEffect(() => {
@@ -134,21 +95,6 @@ export default function LivePage() {
   }, []);
 
   const stage = STAGE_DATA[currentStageKey];
-
-  const handleSendChat = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputMsg.trim()) return;
-    setChatMessages((prev) => [
-      ...prev,
-      {
-        badge: 'CADET',
-        badgeClass: 'badge-cadet',
-        sender: 'You:',
-        content: inputMsg.trim(),
-      },
-    ]);
-    setInputMsg('');
-  };
 
   return (
     <>
@@ -278,42 +224,11 @@ export default function LivePage() {
                 </div>
               </div>
 
-              {/* Right Column: Rank-Tiered Live Chat Panel */}
-              <div className="live-chat-panel">
-                <div className="chat-head">
-                  <span className="chat-head-title">ARENA LIVE CHAT</span>
-                  <span className="chat-viewers-count" id="chatViewersBadge">
-                    {stage.viewers}
-                  </span>
-                </div>
-
-                {/* Scrollable Message Body */}
-                <div className="chat-msgs-body" id="chatMsgsBody">
-                  {chatMessages.map((msg, idx) => (
-                    <div key={idx} className="chat-msg-row">
-                      <span className={`chat-badge ${msg.badgeClass}`}>{msg.badge}</span>
-                      <span className="chat-sender">{msg.sender}</span>
-                      <span className="chat-content">{msg.content}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Chat Input Bar */}
-                <form className="chat-input-bar" onSubmit={handleSendChat}>
-                  <input
-                    type="text"
-                    className="chat-input"
-                    id="chatInput"
-                    placeholder="Send a message as Cadet..."
-                    required
-                    value={inputMsg}
-                    onChange={(e) => setInputMsg(e.target.value)}
-                  />
-                  <button type="submit" className="chat-send-btn">
-                    SEND
-                  </button>
-                </form>
-              </div>
+              {/* Right Column: Enhanced Live Chat Panel */}
+              <LiveChat 
+                youtubeVideoId={process.env.NEXT_PUBLIC_YOUTUBE_LIVE_VIDEO_ID || 'debug'}
+                className=""
+              />
             </div>
           </div>
         </section>
