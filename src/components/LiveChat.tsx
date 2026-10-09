@@ -34,58 +34,26 @@ export default function LiveChat({ youtubeVideoId, className = '' }: LiveChatPro
   
   const chatService = useRef<YouTubeLiveChatService | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
   const pageTokenRef = useRef<string | undefined>(undefined);
 
-  // Initialize with some default messages
+  // Initialize with empty messages array
   useEffect(() => {
-    const defaultMessages: DisplayMessage[] = [
-      {
-        id: 'default-1',
-        content: 'Welcome to the Grand Finals everyone! Make some noise in chat!',
-        sender: 'Parardha',
-        badge: 'VANGUARD',
-        source: 'local',
-        timestamp: new Date().toISOString(),
-      },
-      {
-        id: 'default-2',
-        content: 'A-site defense is completely locked down this half!',
-        sender: 'Aether',
-        badge: 'VARSITY',
-        source: 'local',
-        timestamp: new Date().toISOString(),
-      },
-      {
-        id: 'default-3',
-        content: 'THAT FLICK FROM PHANTOM WAS DISGUSTING 🔥🔥🔥',
-        sender: 'Krypton',
-        badge: 'CONTENDER',
-        source: 'local',
-        timestamp: new Date().toISOString(),
-      },
-      {
-        id: 'default-4',
-        content: 'First time watching collegiate finals, the production quality is insane!',
-        sender: 'Rookie_09',
-        badge: 'CADET',
-        source: 'local',
-        timestamp: new Date().toISOString(),
-      },
-    ];
-    
-    setMessages(defaultMessages);
+    console.log('🚀 Initializing chat with empty messages');
+    setMessages([]); // Start with empty chat
     setIsLoading(false);
 
     // Initialize YouTube chat if API key and video ID are available
     const apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
     if (apiKey && youtubeVideoId) {
-      // Enable debug mode if video ID is 'debug' or 'test'
-      const isDebugMode = youtubeVideoId === 'debug' || youtubeVideoId === 'test';
+      // Only use debug mode if explicitly set to 'debug' and no real video ID
+      const isDebugMode = youtubeVideoId === 'debug' && !youtubeVideoId.match(/^[a-zA-Z0-9_-]{11}$/);
+      console.log('🔧 Debug mode:', isDebugMode, 'for video ID:', youtubeVideoId);
       chatService.current = new YouTubeLiveChatService(apiKey, isDebugMode);
       initializeYouTubeChat();
     } else {
-      console.warn('YouTube API key or video ID not configured. Showing local messages only.');
+      console.warn('YouTube API key or video ID not configured. Chat will only show user messages.');
     }
 
     return () => {
@@ -120,6 +88,8 @@ export default function LiveChat({ youtubeVideoId, className = '' }: LiveChatPro
       if (result && result.messages.length > 0) {
         const newMessages: DisplayMessage[] = result.messages.map(convertYouTubeMessage);
         
+        console.log('📥 New messages received:', newMessages.map(m => `${m.sender}: ${m.content}`));
+        
         setMessages(prev => {
           // Add new messages and keep only the last 100 messages
           const updated = [...prev, ...newMessages].slice(-100);
@@ -129,12 +99,20 @@ export default function LiveChat({ youtubeVideoId, className = '' }: LiveChatPro
         pageTokenRef.current = result.nextPageToken;
       }
 
-      // Schedule next poll
-      pollingRef.current = setTimeout(startPolling, result?.pollingIntervalMillis || 5000);
+      // Use YouTube's recommended polling interval (usually 5-10 seconds)
+      const pollingInterval = result?.pollingIntervalMillis || 10000; // Default to 10 seconds to avoid rate limits
+      pollingRef.current = setTimeout(startPolling, pollingInterval);
+      
     } catch (error) {
       console.error('YouTube polling error:', error);
-      // Retry in 10 seconds on error
-      pollingRef.current = setTimeout(startPolling, 10000);
+      
+      // If rate limited, wait longer before retrying
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isRateLimit = errorMessage.includes('403') || errorMessage.includes('rateLimitExceeded');
+      const retryDelay = isRateLimit ? 30000 : 15000; // 30s for rate limit, 15s for other errors
+      
+      console.log(`Retrying in ${retryDelay / 1000} seconds...`);
+      pollingRef.current = setTimeout(startPolling, retryDelay);
     }
   };
 
@@ -159,14 +137,25 @@ export default function LiveChat({ youtubeVideoId, className = '' }: LiveChatPro
     };
   };
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive (only within chat container)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Use the ref for reliable container-only scrolling
+    if (chatContainerRef.current) {
+      setTimeout(() => {
+        if (chatContainerRef.current) {
+          chatContainerRef.current.scrollTo({
+            top: chatContainerRef.current.scrollHeight,
+            behavior: 'smooth'
+          });
+        }
+      }, 50);
+    }
   }, [messages]);
 
   // Handle sending local message (no storage, just display)
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent event bubbling
     
     if (!inputMsg.trim()) return;
 
@@ -181,6 +170,33 @@ export default function LiveChat({ youtubeVideoId, className = '' }: LiveChatPro
 
     setMessages(prev => [...prev, newMessage].slice(-100));
     setInputMsg('');
+  };
+
+  // Handle Enter key press specifically
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // Prevent default Enter behavior
+      e.stopPropagation(); // Stop event from bubbling up
+      
+      if (!inputMsg.trim()) return;
+
+      const newMessage: DisplayMessage = {
+        id: Date.now().toString(),
+        content: inputMsg.trim(),
+        sender: anonymousUsername,
+        badge: 'CADET',
+        source: 'local',
+        timestamp: new Date().toISOString(),
+      };
+
+      setMessages(prev => [...prev, newMessage].slice(-100));
+      setInputMsg('');
+      
+      // Keep focus on input after sending message
+      const target = e.target as HTMLInputElement;
+      target.blur();
+      setTimeout(() => target.focus(), 0);
+    }
   };
 
   // Get badge class for styling
@@ -239,18 +255,32 @@ export default function LiveChat({ youtubeVideoId, className = '' }: LiveChatPro
       </div>
 
       {/* Messages Body */}
-      <div className="chat-msgs-body">
-        {messages.map((msg) => (
-          <div key={msg.id} className="chat-msg-row">
-            <span className={`chat-badge ${getBadgeClass(msg.badge)}`}>
-              {msg.badge}
-            </span>
-            <span className="chat-sender">
-              {getSourceIndicator(msg.source)} {msg.sender}:
-            </span>
-            <span className="chat-content">{msg.content}</span>
+      <div className="chat-msgs-body" ref={chatContainerRef}>
+        {messages.length === 0 ? (
+          <div style={{ 
+            textAlign: 'center', 
+            color: 'var(--white-muted)', 
+            fontStyle: 'italic',
+            padding: '2rem 0'
+          }}>
+            Chat will appear here when available...
           </div>
-        ))}
+        ) : (
+          messages.map((msg) => (
+            <div key={msg.id} className="chat-msg-row">
+              {/* Only show badge if it's not CADET */}
+              {msg.badge !== 'CADET' && (
+                <span className={`chat-badge ${getBadgeClass(msg.badge)}`}>
+                  {msg.badge}
+                </span>
+              )}
+              <span className="chat-sender">
+                {msg.sender}:
+              </span>
+              <span className="chat-content">{msg.content}</span>
+            </div>
+          ))
+        )}
         <div ref={messagesEndRef} />
       </div>
 
@@ -265,13 +295,6 @@ export default function LiveChat({ youtubeVideoId, className = '' }: LiveChatPro
         fontFamily: 'var(--font-mono)',
       }}>
         Chatting as: <span style={{ color: '#fff' }}>{anonymousUsername}</span>
-        <span className="chat-badge badge-cadet" style={{
-          marginLeft: '8px',
-          fontSize: '0.6rem',
-          padding: '0.05rem 0.3rem'
-        }}>
-          CADET
-        </span>
       </div>
 
       {/* Chat Input */}
@@ -280,10 +303,11 @@ export default function LiveChat({ youtubeVideoId, className = '' }: LiveChatPro
           type="text"
           className="chat-input"
           placeholder={`Send a message as ${anonymousUsername}...`}
-          required
           value={inputMsg}
           onChange={(e) => setInputMsg(e.target.value)}
+          onKeyDown={handleKeyDown}
           maxLength={500}
+          autoComplete="off"
         />
         <button type="submit" className="chat-send-btn">
           SEND

@@ -87,8 +87,24 @@ export class YouTubeLiveChatService {
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`YouTube API error: ${response.status} - ${errorText}`);
-        throw new Error(`YouTube API error: ${response.status}`);
+        let parsedError;
+        
+        try {
+          parsedError = JSON.parse(errorText);
+        } catch {
+          parsedError = { error: { message: errorText } };
+        }
+        
+        // Handle rate limiting specifically
+        if (response.status === 403) {
+          const errorMessage = parsedError.error?.message || errorText;
+          if (errorMessage.includes('rateLimitExceeded') || errorMessage.includes('too soon')) {
+            throw new Error(`Rate limit exceeded. YouTube API requests are being sent too frequently. Please wait before the next request.`);
+          }
+        }
+        
+        console.error(`YouTube API error: ${response.status} -`, parsedError);
+        throw new Error(`YouTube API error: ${response.status} - ${parsedError.error?.message || 'Unknown error'}`);
       }
       
       const data = await response.json();
@@ -104,14 +120,17 @@ export class YouTubeLiveChatService {
         isChatSponsor: item.authorDetails.isChatSponsor,
       })) || [];
 
+      // Ensure minimum polling interval of 5 seconds to avoid rate limits
+      const pollingInterval = Math.max(data.pollingIntervalMillis || 10000, 5000);
+
       return {
         messages,
         nextPageToken: data.nextPageToken,
-        pollingIntervalMillis: data.pollingIntervalMillis || 5000,
+        pollingIntervalMillis: pollingInterval,
       };
     } catch (error) {
       console.error('Error fetching live chat messages:', error);
-      return null;
+      throw error; // Re-throw to be handled by the calling code
     }
   }
 
@@ -165,7 +184,7 @@ export class YouTubeLiveChatService {
     console.log(`🔧 DEBUG: Generated ${messageCount} mock messages`);
     return {
       messages: mockMessages,
-      pollingIntervalMillis: 3000, // Faster polling for testing
+      pollingIntervalMillis: 8000, // Longer polling for debug mode (8 seconds)
     };
   }
 
