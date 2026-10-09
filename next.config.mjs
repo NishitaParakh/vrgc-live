@@ -39,8 +39,6 @@ const nextConfig = {
   },
   // Enable HTTP compression
   compress: true,
-  // Minimise JS in production
-  swcMinify: true,
 };
 
 export default nextConfig;
