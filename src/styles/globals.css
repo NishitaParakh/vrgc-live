@@ -2381,7 +2381,48 @@ body.theme-crimson .if-bottom span:last-child {
   transition: background 0.2s;
 }
 .chat-send-btn:hover {
-  background: #ff2b4e;
+  background: #dc2626;
+}
+.chat-send-btn:active {
+  background: #b91c1c;
+}
+
+/* Chat message animations */
+.chat-msg-row {
+  animation: slideInChat 0.3s ease-out;
+}
+
+@keyframes slideInChat {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Source indicators */
+.chat-sender {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Scrollbar styling for chat */
+.chat-msgs-body::-webkit-scrollbar {
+  width: 6px;
+}
+.chat-msgs-body::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+.chat-msgs-body::-webkit-scrollbar-thumb {
+  background: rgba(239, 68, 68, 0.4);
+  border-radius: 3px;
+}
+.chat-msgs-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(239, 68, 68, 0.6);
 }
 
 /* Calm Near-Black Sections Below Fold */
