@@ -45,7 +45,7 @@ export function Footer() {
           </div>
         </div>
 
-        {/* COLUMN 2 — EXPLORE */}
+        {/* COLUMN 2 — EXPLORE 
         <div className="if-col">
           <h4>EXPLORE</h4>
           <ul>
@@ -65,7 +65,7 @@ export function Footer() {
               <Link href="/community">Community</Link>
             </li>
           </ul>
-        </div>
+        </div> */}
 
         {/* COLUMN 3 — RESOURCES */}
         <div className="if-col">
@@ -74,9 +74,9 @@ export function Footer() {
             <li>
               <Link href="/tools">Organizer Tools</Link>
             </li>
-            <li>
+            {/*<li>
               <Link href="/events">Events</Link>
-            </li>
+            </li>*/}
             <li>
               <Link href="/events">Workshops</Link>
             </li>
@@ -178,6 +178,20 @@ export function Footer() {
 
       {/* BOTTOM COPYRIGHT ROW */}
       <div className="if-bottom">
+        {/* INSTITUTION LOGO STRIP */}
+        <div className="institution-logo-strip">
+          <img 
+          className="sw-office-logo"
+          src="/logos/sw-office-logo.png"
+          alt="Office of Students' Welfare, VIT Bhopal"
+          />
+          <span className="institution-logo-divider" />
+          <img
+            className="vit-bhopal-logo"
+            src="/logos/vit-bhopal-logo.png"
+            alt="VIT Bhopal University"
+          />
+        </div>
         <div className="if-bottom-left">
           <span>&copy; {new Date().getFullYear()} VIRTUAL REALITY AND GAMING CLUB (VRGC) &mdash; VIT BHOPAL. ALL RIGHTS RESERVED.</span>
         </div>
@@ -190,3 +204,4 @@ export function Footer() {
     </footer>
   );
 }
+

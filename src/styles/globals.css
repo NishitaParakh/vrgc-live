@@ -387,6 +387,7 @@ img { display: block; max-width: 100%; }
   letter-spacing: 0.22em; font-weight: 700;
   color: var(--white-muted); text-transform: uppercase;
   margin-bottom: 1rem;
+
 }
 .ink-sec-tag .tag-sq {
   width: 7px; height: 7px; background: var(--purple-brand);
@@ -396,6 +397,7 @@ img { display: block; max-width: 100%; }
   padding: clamp(6rem, 12vw, 10rem) var(--pad);
   position: relative;
 }
+
 
 /* ── SECTION 2: DEFINING THE NEXT GENERATION (FEATURE HERO) ── */
 .ink-section {
@@ -467,12 +469,20 @@ img { display: block; max-width: 100%; }
   border-color: #fff; z-index: 10;
 }
 .ipb-floating-card img { width: 100%; height: 100%; object-fit: cover; }
-.card-pos-1 { top: 10%; left: 5%; transform: rotate(-12deg); }
+/*.card-pos-1 { top: 10%; left: 5%; transform: rotate(-12deg); }
 .card-pos-2 { top: 8%; right: 6%; transform: rotate(14deg); }
 .card-pos-3 { bottom: 12%; left: 8%; transform: rotate(8deg); }
 .card-pos-4 { bottom: 10%; right: 7%; transform: rotate(-10deg); }
 .card-pos-5 { top: 48%; left: 2%; transform: rotate(-5deg); }
+.card-pos-6 { top: 45%; right: 3%; transform: rotate(7deg); }*/
+
+.card-pos-1 { top: 8%; left: 3%; transform: rotate(-7deg); }
+.card-pos-2 { top: 6%; right: 3%; transform: rotate(7deg); }
+.card-pos-3 { bottom: 8%; left: 5%; transform: rotate(5deg); }
+.card-pos-4 { bottom: 7%; right: 4%; transform: rotate(-6deg); }
+.card-pos-5 { top: 48%; left: 2%; transform: rotate(-5deg); }
 .card-pos-6 { top: 45%; right: 3%; transform: rotate(7deg); }
+
 
 /* ── SECTION 4: PLAY. COMPETE. DOMINATE. (THE 3 TALL CARDS) ── */
 .ink-three-pillars {
@@ -1137,7 +1147,7 @@ img { display: block; max-width: 100%; }
 .play-circle { width: 60px; height: 60px; border-radius: 50%; background: var(--purple-brand); display: flex; align-items: center; justify-content: center; }
 .play-triangle { width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-left: 16px solid #fff; margin-left: 5px; }
 .vod-info { padding: 1.5rem; text-align: left; }
-.vod-title { font-family: var(--font-display); font-size: 1.8rem; color: #fff; margin-bottom: 0.5rem; line-height: 1.1; }
+.vod-title { font-family: var(--font-display); font-size: 1.8rem; color: #fff; margin-bottom: 0.5rem; line-height: 1.1; font-weight: 600}
 .vod-meta { font-family: var(--font-mono); font-size: 0.75rem; color: var(--white-muted); display: flex; gap: 1rem; }
 /* ----------------------------------------------------
    MOBILE RESPONSIVENESS & HAMBURGER MENU
@@ -1361,6 +1371,7 @@ img { display: block; max-width: 100%; }
   gap: 1.5rem;
   margin-top: 2.5rem;
   margin-bottom: 3.5rem;
+  
 }
 .lab-spec-box {
   background: rgba(255, 255, 255, 0.03);
@@ -1368,6 +1379,8 @@ img { display: block; max-width: 100%; }
   border-radius: 8px;
   padding: 1.75rem 1.25rem;
   text-align: center;
+  transform: translateY(-300px);
+
 }
 .lab-spec-val {
   font-family: var(--font-display);
@@ -2323,6 +2336,8 @@ body.theme-crimson .if-bottom span:last-child {
   min-height: 480px;
   min-width: 0;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  transform: scale(0.95);
+  transform-origin: top right;
 }
 @media (max-width: 1100px) {
   .live-chat-panel {
@@ -3770,6 +3785,276 @@ body.page-entering {
 .vod-card:hover .vod-thumb img {
   transform: scale(1.06);
 }
+
+/* Institutional logo strip */
+.ink-footer .institution-logo-strip {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin: 0;
+  padding: 4px 0;
+  box-sizing: border-box;
+}
+
+/* First logo: slightly larger */
+.ink-footer .institution-logo-strip img.sw-office-logo {
+  height: 55px !important;
+  width: auto !important;
+  max-width: 120px;
+  object-fit: contain;
+}
+
+/* Second logo: slightly smaller */
+.ink-footer .institution-logo-strip img.vit-bhopal-logo {
+  height: 50px !important;
+  width: auto !important;
+  max-width: 120px;
+  object-fit: contain;
+}
+
+/* Divider */
+.ink-footer .institution-logo-divider {
+  width: 1px;
+  height: 26px;
+  background: currentColor;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .ink-footer .institution-logo-strip {
+    gap: 10px;
+  }
+
+  .ink-footer .institution-logo-strip img.sw-office-logo {
+    height: 25px !important;
+  }
+
+  .ink-footer .institution-logo-strip img.vit-bhopal-logo {
+    height: 22px !important;
+  }
+}
+
+/* Reduce space between footer content and logo strip */
+.ink-footer .if-top {
+  margin-bottom: 0 !important;
+  padding-bottom: 8px !important;
+}
+
+.ink-footer .footer-institution-strip {
+  margin-top: 0 !important;
+}
+
+/* Keep copyright close to the logos */
+.ink-footer .if-bottom {
+  margin-top: 0 !important;
+  padding-top: 8px !important;
+}
+
+/* ===== VRGC STUDIO VIDEO SECTION ===== */
+.studio-video-hero {
+  position: relative;
+  isolation: isolate;
+  width: var(--video-width, 78wv);
+  max-width: none;
+  min-height: clamp(280px, 45vw, 600px);
+  height: clamp(280px, 45vw, 600px);
+  left: calc(50% - 50vw);
+  margin-left: calc((100% - var(--video-width, 78vw)) / 2);
+  margin-right: 0;
+  display: flex;
+  align-items: center;
+  padding: clamp(1rem, 3vw, 2rem);
+  box-sizing: border-box;
+  overflow: visible;
+  border-radius: 12px;
+  background: #08090b;
+
+  transform: translateY(-40px) 
+  perspective(900px)
+  translateZ(0);
+  transform-origin: center center;
+  will-change: width, transform;
+
+  box-shadow:
+    -20px 25px 45px rgba(0, 0, 0, 0.45),
+    0 0 25px rgba(168, 85, 247, 0.12);
+}
+
+.studio-video-background {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: -2;
+  border-radius: 12px;
+}
+
+.studio-video-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 12px;
+  background: linear-gradient(
+    90deg,
+    rgba(5, 6, 8, 0.75),
+    rgba(5, 6, 8, 0.1)
+  );
+}
+
+.studio-video-copy {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .studio-video-hero {
+    width: 94%;
+    min-height: 360px;
+    margin: 1rem auto 3rem;
+    transform: perspective(900px) rotateY(-5deg);
+  }
+}
+
+
+/* Align VR hardware heading to the left */
+.ink-sec-layout > h2 {
+  position: relative;
+  z-index: 2;
+  text-align: center !important;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  transform: translateY(3px);
+}
+
+.ink-sec-layout > p {
+  width: 90% !important;
+  max-width: 1200px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  white-space: normal !important;
+  text-align: center !important;
+  font-size: 1.25rem !important;
+  line-height: 1.9;
+}
+
+/* Keep the introductory label and paragraph left-aligned */
+.ink-sec-layout > .ink-sec-tag {
+  display: flex;
+  justify-content: flex-start;
+  text-align: center;
+  width: 100%;
+  margin-left: 0;
+}
+
+.ink-sec-layout .studio-video-hero {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .studio-video-hero {
+    width: var(--video-width, 90vw);
+    max-width: none;
+    margin-left: calc((100% - var(--video-width, 90vw)) / 2);
+    margin-right: 0;
+
+    min-height: 420px;
+    height: 45vw;
+    transform: translateY(-100px);
+    transform-origin: center center;
+  }
+
+  .lab-specs-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    transform: none;
+  }
+
+  .lab-spec-box {
+    transform: none;
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .studio-video-hero {
+    width: var(--video-width, 96vw);
+    max-width: none;
+    margin-left: calc((100% - var(--video-width, 96vw)) / 2);
+    margin-right: 0;
+
+    min-height: 280px;
+    height: 65vw;
+    padding: 1rem;
+    transform: translateY(0);
+    transform-origin: center center;
+    border-radius: 8px;
+  }
+
+  .studio-video-background {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+  }
+
+  .studio-video-copy {
+    width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .studio-video-copy h2 {
+    font-size: clamp(1.5rem, 7vw, 2.5rem);
+  }
+
+  .lab-specs-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    width: 100%;
+    margin-top: 1.5rem;
+    transform: none;
+  }
+
+  .lab-spec-box {
+    padding: 1.25rem 1rem;
+    transform: none;
+  }
+}
+
+.studio-video-hero {
+  left: 50%;
+  margin-left: 0;
+  translate: -50% 0;
+}
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
 
 
 

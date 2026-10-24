@@ -56,6 +56,40 @@ export default function AboutPage({ initialData }: AboutPageProps) {
       .finally(() => setIsLoading(false));
   }, [initialData]);
 
+  useEffect(() => {
+    const video = document.querySelector<HTMLElement>(
+      ".studio-video-hero"
+    );
+
+    if (!video) return;
+
+    const updateWidth = () => {
+      const rect = video.getBoundingClientRect();
+      const viewportCenter = window.innerHeight / 2;
+      const videoCenter = rect.top + rect.height / 2;
+
+      const distance = Math.abs(videoCenter - viewportCenter);
+      const progress = Math.max(
+        0,
+        Math.min(1, 1 - distance / (window.innerHeight * 0.7))
+      );
+
+      const width = 78 + progress * 22;
+
+      video.style.setProperty("--video-width", `${width}vw`);
+    };
+
+    updateWidth();
+
+    window.addEventListener("scroll", updateWidth, { passive: true });
+    window.addEventListener("resize", updateWidth);
+
+    return () => {
+      window.removeEventListener("scroll", updateWidth);
+      window.removeEventListener("resize", updateWidth);
+    };
+  }, []);
+
   const allVerifiedMembers = useMemo(() => {
     // Only create tiles for members strictly verified to have photo data in the Git repository
     if (galleryMembers && galleryMembers.length > 0) {
@@ -598,18 +632,36 @@ export default function AboutPage({ initialData }: AboutPageProps) {
              SECTION 4: VR HARDWARE SHOWCASE
              ══════════════════════════════════════════════════ */}
         <section className="ink-sec-layout" style={{ background: '#0d011a', borderTop: '1px solid rgba(168, 85, 247, 0.15)', padding: '6rem var(--pad, 2rem)' }}>
-          <div className="ink-sec-tag" style={{ justifyContent: 'center' }}>
+          <div className="ink-sec-tag" style={{ justifyContent: 'left' }}>
             <span className="tag-sq"></span> CAMPUS RESEARCH FACILITY
           </div>
           <ScrollFloat
             as="h2"
-            style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(3rem, 7vw, 5rem)', textAlign: 'center', color: '#fff', lineHeight: 0.95, marginBottom: '1rem', letterSpacing: '0.03em' }}
+            style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(3rem, 7vw, 5rem)', textAlign: 'center', color: '#fff5f5', lineHeight: 0.95, marginBottom: '1rem', letterSpacing: '0.03em' }}
           >
             THE VR HARDWARE &amp; ESPORTS LAB
           </ScrollFloat>
-          <p style={{ textAlign: 'center', maxWidth: '650px', margin: '0 auto 3.5rem', color: '#94a3b8', fontSize: '1.05rem', lineHeight: 1.6 }}>
-            Our flagship campus facility serves as both a high-performance tournament practice arena and a spatial computing incubation lab.
+
+          <p style={{ textAlign: 'center', maxWidth: '400px', margin: '0 auto 3.5rem', color: '#94a3b8', fontSize: '1.05rem', lineHeight: 1.6 }}>
+            Our flagship campus facility serves as both a high-performance tournament practice 
+            <br />
+            arena and a spatial computing incubation lab.
           </p>
+
+          <div className="studio-video-hero">
+            <video
+              className="studio-video-background"
+              autoPlay
+              muted
+              loop
+              playsInline
+              aria-hidden="true"
+            >
+              <source src="/videos/vrgc-lab.mp4" type="video/mp4" />
+            </video>
+          </div>
+
+<div className="lab-specs-grid" id="lab-specs"></div>
 
           <div className="lab-specs-grid">
             <div className="lab-spec-box">

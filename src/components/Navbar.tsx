@@ -59,6 +59,7 @@ export function Navbar() {
   ];
 
   return (
+    <>
     <header className={navClasses} id="ink-navbar">
       {!isMobile ? (
         <>
@@ -123,5 +124,6 @@ export function Navbar() {
         />
       )}
     </header>
+    </>
   );
 }
