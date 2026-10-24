@@ -657,7 +657,7 @@ export default function AboutPage({ initialData }: AboutPageProps) {
               playsInline
               aria-hidden="true"
             >
-              <source src="/videos/vrgc-lab.mp4" type="video/mp4" />
+              <source src="https://res.cloudinary.com/mvuzui7n/video/upload/v1792868364/vrgc-lab_1.mp4" type="video/mp4" />
             </video>
           </div>
 
